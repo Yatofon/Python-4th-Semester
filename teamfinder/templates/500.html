@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %} - Ошибка сервера{% endblock %}
+
+{% block content %}
+<div class="error-page">
+    <div class="error-content">
+        <h1 class="error-code">500</h1>
+        <h2 class="error-title">Ошибка сервера</h2>
+        <p class="error-description">Что-то пошло не так. Мы уже работаем над исправлением.</p>
+        <a href="{% url 'projects:list' %}" class="btn btn--primary">Вернуться на главную</a>
+    </div>
+</div>
+{% endblock %}

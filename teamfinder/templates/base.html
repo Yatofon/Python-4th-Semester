@@ -1,0 +1,95 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TeamFinder {% block title %}{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <div class="header__inner">
+                <div class="header__logo">
+                    <a href="{% url 'projects:list' %}" class="logo">TeamFinder</a>
+                </div>
+                
+                <nav class="header__nav">
+                    <ul class="nav__list">
+                        <li><a href="{% url 'projects:list' %}" class="nav__link">Проекты</a></li>
+                        <li><a href="{% url 'users:list' %}" class="nav__link">Пользователи</a></li>
+                        {% if user.is_authenticated %}
+                            <li><a href="{% url 'projects:favorites' %}" class="nav__link">Избранное</a></li>
+                        {% endif %}
+                    </ul>
+                </nav>
+
+                <div class="header__actions">
+                    {% if user.is_authenticated %}
+                        <div class="user-menu">
+                            <button class="user-menu__btn">
+                                {% if user.avatar %}
+                                    <img src="{{ user.avatar.url }}" alt="{{ user.name }}" class="user-avatar">
+                                {% else %}
+                                    <div class="user-avatar-placeholder">{{ user.name|first }}{{ user.surname|first }}</div>
+                                {% endif %}
+                                <span class="user-name">{{ user.name }} {{ user.surname }}</span>
+                                <svg class="chevron-icon" width="16" height="16" viewBox="0 0 24 24" fill="none">
+                                    <path d="M6 9L12 15L18 9" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                                </svg>
+                            </button>
+                            <div class="user-menu__dropdown">
+                                <a href="{% url 'users:detail' user.pk %}" class="dropdown__item">Мой профиль</a>
+                                <a href="{% url 'users:edit' %}" class="dropdown__item">Редактировать профиль</a>
+                                <a href="{% url 'users:change_password' %}" class="dropdown__item">Сменить пароль</a>
+                                <a href="{% url 'projects:create' %}" class="dropdown__item">Создать проект</a>
+                                <hr class="dropdown__divider">
+                                <a href="{% url 'users:logout' %}" class="dropdown__item dropdown__item--danger">Выйти</a>
+                            </div>
+                        </div>
+                    {% else %}
+                        <a href="{% url 'users:login' %}" class="btn btn--outline">Войти</a>
+                        <a href="{% url 'users:register' %}" class="btn btn--primary">Регистрация</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="main">
+        <div class="container">
+            {% if messages %}
+                <div class="messages">
+                    {% for message in messages %}
+                        <div class="message message--{{ message.tags }}">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer__inner">
+                <p class="footer__copyright">© 2026 TeamFinder. Платформа для поиска команды</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        document.querySelector('.user-menu__btn')?.addEventListener('click', function() {
+            document.querySelector('.user-menu__dropdown')?.classList.toggle('show');
+        });
+        
+        window.addEventListener('click', function(e) {
+            if (!e.target.closest('.user-menu')) {
+                document.querySelector('.user-menu__dropdown')?.classList.remove('show');
+            }
+        });
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

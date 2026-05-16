@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <h1>Пользователи</h1>
+    {% if participants %}
+        <ul>
+            {% for participant in participants %}
+                <li>
+                    <a href="{% url 'users:detail' participant.pk %}">
+                        {{ participant.name }} {{ participant.surname }}
+                    </a>
+                </li>
+            {% endfor %}
+        </ul>
+        {% include 'includes/pagination.html' %}
+    {% else %}
+        <p>Пользователи не найдены</p>
+    {% endif %}
+{% endblock %}

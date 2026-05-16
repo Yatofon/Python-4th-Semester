@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %} - Редактирование профиля{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <div class="form-card">
+        <h1 class="form-title">Редактирование профиля</h1>
+        
+        <form method="post" enctype="multipart/form-data" class="profile-form">
+            {% csrf_token %}
+            
+            <div class="form-section">
+                <h2 class="section-title">Основная информация</h2>
+                
+                <div class="form-group">
+                    <label for="{{ form.name.id_for_label }}" class="form-label">Имя *</label>
+                    {{ form.name }}
+                    {% if form.name.errors %}
+                        <div class="form-errors">{{ form.name.errors }}</div>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    <label for="{{ form.surname.id_for_label }}" class="form-label">Фамилия *</label>
+                    {{ form.surname }}
+                    {% if form.surname.errors %}
+                        <div class="form-errors">{{ form.surname.errors }}</div>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    <label for="{{ form.avatar.id_for_label }}" class="form-label">Аватар</label>
+                    {% if user.avatar and user.avatar.url != '/media/avatars/default.png' %}
+                        <div class="current-avatar">
+                            <img src="{{ user.avatar.url }}" alt="Текущий аватар" class="current-avatar-img">
+                            <p class="current-avatar-text">Текущий аватар</p>
+                        </div>
+                    {% endif %}
+                    {{ form.avatar }}
+                    {% if form.avatar.errors %}
+                        <div class="form-errors">{{ form.avatar.errors }}</div>
+                    {% endif %}
+                    <small class="form-help">Рекомендуемый размер: 200x200 пикселей</small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="{{ form.about.id_for_label }}" class="form-label">О себе</label>
+                    {{ form.about }}
+                    {% if form.about.errors %}
+                        <div class="form-errors">{{ form.about.errors }}</div>
+                    {% endif %}
+                    <small class="form-help">Расскажите о себе, своих навыках и интересах (максимум 256 символов)</small>
+                </div>
+            </div>
+            
+            <div class="form-section">
+                <h2 class="section-title">Контактные данные</h2>
+                
+                <div class="form-group">
+                    <label for="{{ form.phone.id_for_label }}" class="form-label">Телефон *</label>
+                    {{ form.phone }}
+                    {% if form.phone.errors %}
+                        <div class="form-errors">{{ form.phone.errors }}</div>
+                    {% endif %}
+                    <small class="form-help">Формат: +7XXXXXXXXXX или 8XXXXXXXXXX</small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="{{ form.github_url.id_for_label }}" class="form-label">Ссылка на GitHub</label>
+                    {{ form.github_url }}
+                    {% if form.github_url.errors %}
+                        <div class="form-errors">{{ form.github_url.errors }}</div>
+                    {% endif %}
+                    <small class="form-help">Пример: https://github.com/username</small>
+                </div>
+            </div>
+            
+            {% if form.non_field_errors %}
+                <div class="form-errors form-errors--nonfield">
+                    {{ form.non_field_errors }}
+                </div>
+            {% endif %}
+            
+            <div class="form-actions">
+                <button type="submit" class="btn btn--primary">Сохранить изменения</button>
+                <a href="{% url 'users:detail' user.pk %}" class="btn btn--outline">Отмена</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

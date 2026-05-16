@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %} - Проекты{% endblock %}
+
+{% block content %}
+    <div class="projects-header">
+        <h1 class="page-title">Актуальные проекты</h1>
+        {% if user.is_authenticated %}
+            <a href="{% url 'projects:create' %}" class="btn btn--primary">+ Создать проект</a>
+        {% endif %}
+    </div>
+
+    {% if projects %}
+        <div class="projects-grid">
+            {% for project in projects %}
+                <div class="project-card">
+                    <div class="project-card__header">
+                        <div class="project-author">
+                            <a href="{% url 'users:detail' project.owner.pk %}" class="author-link">
+                                {% if project.owner.avatar %}
+                                    <img src="{{ project.owner.avatar.url }}" alt="{{ project.owner.name }}" class="author-avatar">
+                                {% else %}
+                                    <div class="author-avatar-placeholder">{{ project.owner.name|first }}{{ project.owner.surname|first }}</div>
+                                {% endif %}
+                                <span class="author-name">{{ project.owner.name }} {{ project.owner.surname }}</span>
+                            </a>
+                        </div>
+                        {% if user.is_authenticated %}
+                            <button class="favorite-btn {% if project.id in favorites %}favorited{% endif %}" data-project-id="{{ project.id }}">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="{% if project.id in favorites %}currentColor{% else %}none{% endif %}" stroke="currentColor" stroke-width="2">
+                                    <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                                </svg>
+                            </button>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="project-card__body">
+                        <h3 class="project-title">
+                            <a href="{% url 'projects:detail' project.pk %}">{{ project.name }}</a>
+                        </h3>
+                        <p class="project-description">{{ project.description|truncatewords:20 }}</p>
+                    </div>
+                    
+                    <div class="project-card__footer">
+                        <span class="project-date">{{ project.created_at|date:"d.m.Y" }}</span>
+                        <span class="project-status status--{{ project.status }}">{{ project.get_status_display }}</span>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+        
+        {% include 'includes/pagination.html' %}
+    {% else %}
+        <div class="empty-state">
+            <p>Пока нет ни одного проекта. Будьте первым!</p>
+            {% if user.is_authenticated %}
+                <a href="{% url 'projects:create' %}" class="btn btn--primary">Создать проект</a>
+            {% endif %}
+        </div>
+    {% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+document.querySelectorAll('.favorite-btn').forEach(btn => {
+    btn.addEventListener('click', function(e) {
+        e.preventDefault();
+        const projectId = this.dataset.projectId;
+        fetch(`/projects/${projectId}/toggle-favorite/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'ok') {
+                if (data.favorited) {
+                    this.classList.add('favorited');
+                    this.querySelector('svg').setAttribute('fill', 'currentColor');
+                } else {
+                    this.classList.remove('favorited');
+                    this.querySelector('svg').setAttribute('fill', 'none');
+                }
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,241 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %} - {{ project.name }}{% endblock %}
+
+{% block content %}
+<div class="project-detail">
+    <div class="project-detail__header">
+        <div class="project-detail__title-section">
+            <h1 class="project-detail__title">{{ project.name }}</h1>
+            <div class="project-detail__actions">
+                {% if user.is_authenticated %}
+                    <button class="favorite-detail-btn {% if is_favorite %}favorited{% endif %}" data-project-id="{{ project.id }}">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="{% if is_favorite %}currentColor{% else %}none{% endif %}" stroke="currentColor" stroke-width="2">
+                            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                        </svg>
+                    </button>
+                    <button class="share-btn" data-url="{{ request.build_absolute_uri }}">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="18" cy="5" r="3"/>
+                            <circle cx="6" cy="12" r="3"/>
+                            <circle cx="18" cy="19" r="3"/>
+                            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+                            <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+                        </svg>
+                    </button>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="project-detail__meta">
+            <div class="project-author-large">
+                <span class="meta-label">Автор:</span>
+                <a href="{% url 'users:detail' project.owner.pk %}" class="author-link">
+                    {% if project.owner.avatar %}
+                        <img src="{{ project.owner.avatar.url }}" alt="{{ project.owner.name }}" class="author-avatar-large">
+                    {% else %}
+                        <div class="author-avatar-placeholder-large">{{ project.owner.name|first }}{{ project.owner.surname|first }}</div>
+                    {% endif %}
+                    <span class="author-name">{{ project.owner.name }} {{ project.owner.surname }}</span>
+                </a>
+            </div>
+            <div class="project-date">
+                <span class="meta-label">Дата публикации:</span>
+                <span>{{ project.created_at|date:"d.m.Y H:i" }}</span>
+            </div>
+            <div class="project-status-large">
+                <span class="meta-label">Статус:</span>
+                <span class="status-badge status--{{ project.status }}">{{ project.get_status_display }}</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="project-detail__body">
+        <div class="project-detail__description">
+            <h2 class="section-title">Описание проекта</h2>
+            <div class="description-content">
+                {% if project.description %}
+                    <p>{{ project.description|linebreaks }}</p>
+                {% else %}
+                    <p class="text-muted">Описание отсутствует</p>
+                {% endif %}
+            </div>
+        </div>
+
+        {% if project.github_url %}
+            <div class="project-detail__github">
+                <h2 class="section-title">GitHub репозиторий</h2>
+                <a href="{{ project.github_url }}" target="_blank" class="github-link" rel="noopener noreferrer">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 2C6.48 2 2 6.48 2 12c0 4.42 2.87 8.17 6.84 9.49.5.09.68-.21.68-.48 0-.24-.01-.88-.01-1.73-2.78.6-3.37-1.34-3.37-1.34-.46-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.61.07-.61 1 .07 1.53 1.03 1.53 1.03.89 1.52 2.34 1.08 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.64 0 0 .84-.27 2.75 1.02.8-.22 1.65-.33 2.5-.33.85 0 1.7.11 2.5.33 1.91-1.29 2.75-1.02 2.75-1.02.55 1.37.2 2.39.1 2.64.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.68-4.57 4.93.36.31.68.92.68 1.85 0 1.34-.01 2.42-.01 2.75 0 .27.18.58.69.48C19.13 20.17 22 16.42 22 12c0-5.52-4.48-10-10-10z"/>
+                    </svg>
+                    {{ project.github_url }}
+                </a>
+            </div>
+        {% endif %}
+    </div>
+
+    <div class="project-detail__footer">
+        <div class="project-actions">
+            {% if user == project.owner or user.is_staff %}
+                {% if project.status == 'open' %}
+                    <div class="owner-actions">
+                        <a href="{% url 'projects:edit' project.pk %}" class="btn btn--outline">Редактировать проект</a>
+                        <button id="complete-project-btn" class="btn btn--danger" data-project-id="{{ project.id }}">Завершить проект</button>
+                    </div>
+                {% else %}
+                    <div class="project-closed-message">
+                        <p class="text-muted">Проект завершён</p>
+                    </div>
+                {% endif %}
+            {% else %}
+                {% if project.status == 'open' %}
+                    <button id="participate-btn" class="btn btn--primary" data-project-id="{{ project.id }}">
+                        {% if is_participant %}
+                            Отказаться от участия
+                        {% else %}
+                            Присоединиться к проекту
+                        {% endif %}
+                    </button>
+                {% else %}
+                    <div class="project-closed-message">
+                        <p class="text-muted">Набор участников закрыт</p>
+                    </div>
+                {% endif %}
+            {% endif %}
+        </div>
+
+        {% if project.participants.exists %}
+            <div class="project-participants">
+                <h2 class="section-title">Участники проекта ({{ project.participants.count }})</h2>
+                <div class="participants-list">
+                    {% for participant in project.participants.all %}
+                        <div class="participant-card">
+                            <a href="{% url 'users:detail' participant.pk %}" class="participant-link">
+                                {% if participant.avatar %}
+                                    <img src="{{ participant.avatar.url }}" alt="{{ participant.name }}" class="participant-avatar">
+                                {% else %}
+                                    <div class="participant-avatar-placeholder">{{ participant.name|first }}{{ participant.surname|first }}</div>
+                                {% endif %}
+                                <span class="participant-name">{{ participant.name }} {{ participant.surname }}</span>
+                            </a>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+const favoriteBtn = document.querySelector('.favorite-detail-btn');
+if (favoriteBtn) {
+    favoriteBtn.addEventListener('click', function() {
+        const projectId = this.dataset.projectId;
+        fetch(`/projects/${projectId}/toggle-favorite/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'ok') {
+                if (data.favorited) {
+                    this.classList.add('favorited');
+                    this.querySelector('svg').setAttribute('fill', 'currentColor');
+                } else {
+                    this.classList.remove('favorited');
+                    this.querySelector('svg').setAttribute('fill', 'none');
+                }
+            }
+        });
+    });
+}
+
+const participateBtn = document.getElementById('participate-btn');
+if (participateBtn) {
+    participateBtn.addEventListener('click', function() {
+        const projectId = this.dataset.projectId;
+        fetch(`/projects/${projectId}/toggle-participate/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'ok') {
+                if (data.is_participant) {
+                    this.textContent = 'Отказаться от участия';
+                } else {
+                    this.textContent = 'Присоединиться к проекту';
+                }
+                location.reload();
+            }
+        });
+    });
+}
+
+const completeBtn = document.getElementById('complete-project-btn');
+if (completeBtn) {
+    completeBtn.addEventListener('click', function() {
+        if (confirm('Вы уверены, что хотите завершить этот проект?')) {
+            const projectId = this.dataset.projectId;
+            fetch(`/projects/${projectId}/complete/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken'),
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'ok') {
+                    location.reload();
+                } else {
+                    alert('Ошибка: ' + data.message);
+                }
+            });
+        }
+    });
+}
+
+const shareBtn = document.querySelector('.share-btn');
+if (shareBtn) {
+    shareBtn.addEventListener('click', function() {
+        const url = this.dataset.url;
+        if (navigator.share) {
+            navigator.share({
+                title: '{{ project.name }}',
+                url: url
+            });
+        } else {
+            navigator.clipboard.writeText(url).then(() => {
+                alert('Ссылка скопирована в буфер обмена');
+            });
+        }
+    });
+}
+</script>
+{% endblock %}

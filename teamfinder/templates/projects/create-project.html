@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{% if is_edit %}Редактирование{% else %}Создание{% endif %} проекта{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <div class="form-card">
+        <h1 class="form-title">
+            {% if is_edit %}
+                Редактирование проекта
+            {% else %}
+                Создание нового проекта
+            {% endif %}
+        </h1>
+
+        <form method="post" class="project-form" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <label for="{{ form.name.id_for_label }}" class="form-label">Название проекта *</label>
+                {{ form.name }}
+                {% if form.name.errors %}
+                    <div class="form-errors">{{ form.name.errors }}</div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.description.id_for_label }}" class="form-label">Описание проекта</label>
+                {{ form.description }}
+                {% if form.description.errors %}
+                    <div class="form-errors">{{ form.description.errors }}</div>
+                {% endif %}
+                <small class="form-help">Расскажите о целях проекта, какие специалисты нужны</small>
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.github_url.id_for_label }}" class="form-label">Ссылка на GitHub</label>
+                {{ form.github_url }}
+                {% if form.github_url.errors %}
+                    <div class="form-errors">{{ form.github_url.errors }}</div>
+                {% endif %}
+                <small class="form-help">Пример: https://github.com/username/repo</small>
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.status.id_for_label }}" class="form-label">Статус проекта</label>
+                {{ form.status }}
+                {% if form.status.errors %}
+                    <div class="form-errors">{{ form.status.errors }}</div>
+                {% endif %}
+            </div>
+
+            {% if form.non_field_errors %}
+                <div class="form-errors form-errors--nonfield">
+                    {{ form.non_field_errors }}
+                </div>
+            {% endif %}
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn--primary">
+                    {% if is_edit %}Сохранить изменения{% else %}Опубликовать{% endif %}
+                </button>
+                <a href="{% if is_edit %}{% url 'projects:detail' project.pk %}{% else %}{% url 'projects:list' %}{% endif %}" class="btn btn--outline">Отмена</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
